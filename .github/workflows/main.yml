@@ -76,12 +76,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p external
+          cd external
           URL="https://github.com/DanSmith888/BaseElements-Plugin-Libraries/releases/download/v0.1.0/external-${PLATFORM}.tar.gz"
           echo "Fetching external libraries from ${URL}"
           curl -sSL -o external.tar.gz "${URL}"
           tar -xzf external.tar.gz
-          pwd
-          ls -lah
+
 
       - name: Configure and build
         env:
