@@ -80,9 +80,8 @@ jobs:
           echo "Fetching external libraries from ${URL}"
           curl -sSL -o external.tar.gz "${URL}"
           tar -xzf external.tar.gz
-          rm -rf "external/${PLATFORM}"
-          mv "${PLATFORM}" "external/${PLATFORM}"
-          rm -f external.tar.gz
+          pwd
+          ls -lah
 
       - name: Configure and build
         env:
