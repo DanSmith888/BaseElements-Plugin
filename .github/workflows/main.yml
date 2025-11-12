@@ -72,6 +72,9 @@ jobs:
         run: |
           VERSION=18
           PRIORITY=100
+          # Remove existing alternatives if they exist (from base packages)
+          sudo update-alternatives --remove-all clang++ 2>/dev/null || true
+          sudo update-alternatives --remove-all clang 2>/dev/null || true
           sudo update-alternatives \
             --install /usr/bin/llvm-config       llvm-config      /usr/bin/llvm-config-${VERSION} ${PRIORITY} \
             --slave   /usr/bin/llvm-ar           llvm-ar          /usr/bin/llvm-ar-${VERSION} \
