@@ -160,8 +160,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-            curl \
-            sudo \
+            curl sudo lsb-release binutils \
             build-essential \
             zip \
             unzip \
