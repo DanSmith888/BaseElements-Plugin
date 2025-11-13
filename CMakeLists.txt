@@ -325,8 +325,11 @@ target_link_libraries(
     heif       # HEIF image format
     de265      # HEVC video codec
     jq         # JSON query processor
-    openjp2    # JPEG 2000 support
-    
+    # Link openjp2 only on macOS (not built on Linux)
+if(APPLE)
+    target_link_libraries(BaseElements PUBLIC openjp2)  # JPEG 2000 support
+endif()
+
     # Poco libraries (continued)
     PocoCrypto
     PocoFoundation
