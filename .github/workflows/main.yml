@@ -160,7 +160,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-            curl sudo lsb-release binutils \
+            curl sudo lsb-release wget software-properties-common gnupg binutils strings \
             build-essential \
             zip \
             unzip \
