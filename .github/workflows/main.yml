@@ -30,6 +30,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Pin libstdc++ to GCC 11
+        if: matrix.platform == 'ubuntu22.04-aarch64'
+        run: |
+          sudo apt-get update
+          echo "=== libstdc++ version before pin ==="
+          dpkg -l | grep libstdc++ || true
+          strings $(gcc -print-file-name=libstdc++.so) 2>/dev/null | grep -i "GLIBCXX" | sort -V | tail -5 || true
+          sudo apt-get install -y --allow-downgrades \
+            libstdc++6=11.4.0-1ubuntu1~22.04.2 \
+            libstdc++-11-dev=11.4.0-1ubuntu1~22.04.2
+          sudo apt-mark hold libstdc++6 libstdc++-11-dev
+          echo "=== libstdc++ version after pin ==="
+          dpkg -l | grep libstdc++ || true
+          strings $(gcc -print-file-name=libstdc++.so) | grep -i "GLIBCXX" | sort -V | tail -5 || true
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
@@ -61,7 +76,11 @@ jobs:
             clang-tools \
             libclang-dev \
             libclang1 \
-            python3-clang \
+            python3-clang
+          # Verify we're using the correct libstdc++ version
+          echo "=== libstdc++ version check ==="
+          dpkg -l | grep libstdc++ || true
+          strings /lib/aarch64-linux-gnu/libstdc++.so.6 2>/dev/null | grep -i "GLIBCXX" | sort -V | tail -5 || true
 
       - name: Install LLVM 18
         run: |
