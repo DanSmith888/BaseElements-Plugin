@@ -30,20 +30,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Pin libstdc++ to GCC 11
+      - name: Check GCC toolchain on ARM
+        if: matrix.platform == 'ubuntu22.04-aarch64'
+        run: |
+          echo "=== GCC in use ==="
+          g++-11 --version || true
+      
+          echo "=== libstdc++ symbols from GCC 11 perspective ==="
+          strings $(g++-11 -print-file-name=libstdc++.so) | grep GLIBCXX_ | sort -V | tail -5 || true
+          
+      - name: Use GCC 11 toolchain on ARM
         if: matrix.platform == 'ubuntu22.04-aarch64'
         run: |
           sudo apt-get update
-          echo "=== libstdc++ version before pin ==="
-          dpkg -l | grep libstdc++ || true
-          strings $(gcc -print-file-name=libstdc++.so) 2>/dev/null | grep -i "GLIBCXX" | sort -V | tail -5 || true
-          sudo apt-get install -y --allow-downgrades \
-            libstdc++6=11.4.0-1ubuntu1~22.04.2 \
-            libstdc++-11-dev=11.4.0-1ubuntu1~22.04.2
-          sudo apt-mark hold libstdc++6 libstdc++-11-dev
-          echo "=== libstdc++ version after pin ==="
-          dpkg -l | grep libstdc++ || true
-          strings $(gcc -print-file-name=libstdc++.so) | grep -i "GLIBCXX" | sort -V | tail -5 || true
+          sudo apt-get install -y g++-11
+
+          echo "=== GCC in use ==="
+          g++-11 --version || true
+      
+          echo "=== libstdc++ symbols from GCC 11 perspective ==="
+          strings $(g++-11 -print-file-name=libstdc++.so) | grep GLIBCXX_ | sort -V | tail -5 || true
 
       - name: Install build dependencies
         run: |

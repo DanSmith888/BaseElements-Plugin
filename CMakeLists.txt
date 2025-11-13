@@ -98,75 +98,20 @@ message(STATUS "Using external platform directory: external/${PLATFORM_DIR}")
 set(CMAKE_C_COMPILER                "clang")
 set(CMAKE_CXX_COMPILER              "clang++")
 
-# For Ubuntu 22.04 on aarch64, ensure Clang uses GCC 11's libstdc++ to avoid requiring GLIBCXX_3.4.32
-# NOTE: We're still using Clang as the compiler (not switching to GCC). We're just telling Clang
-# to use GCC 11's libstdc++ headers/libraries instead of newer ones that LLVM 18 might find.
-# This is critical because:
-# - GitHub Actions ubuntu-22.04-arm installs LLVM 18, which may pull in newer libstdc++ symbols
-# - Target systems running Ubuntu 22.04 only have GCC 11's libstdc++ (max GLIBCXX_3.4.30)
-# - Local builds work fine because they use the system's GCC 11 libstdc++
-# - Other platforms (ubuntu24.04, ubuntu22.04-x86_64) don't have this issue
-if(UBUNTU_VERSION MATCHES "^22" AND TARGET_ARCH MATCHES "aarch64")
-    message(STATUS "Ubuntu 22.04 aarch64 detected - configuring Clang to use GCC 11's libstdc++")
-    
-    # Find GCC 11's libstdc++ (Ubuntu 22.04 default)
-    execute_process(
-        COMMAND g++-11 -print-file-name=libstdc++.so 2>/dev/null || g++ -print-file-name=libstdc++.so
-        OUTPUT_VARIABLE GCC_LIBSTDCXX_PATH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    
-    if(GCC_LIBSTDCXX_PATH)
-        # Get the GCC version directory (e.g., /usr/lib/gcc/aarch64-linux-gnu/11)
-        get_filename_component(GCC_VERSION_DIR "${GCC_LIBSTDCXX_PATH}" DIRECTORY)
-        # Get the base GCC directory (e.g., /usr/lib/gcc/aarch64-linux-gnu)
-        get_filename_component(GCC_BASE_DIR "${GCC_VERSION_DIR}" DIRECTORY)
-        # Extract the toolchain prefix (e.g., /usr)
-        get_filename_component(GCC_LIB_DIR "${GCC_BASE_DIR}" DIRECTORY)  # /usr/lib/gcc
-        get_filename_component(GCC_LIB_DIR "${GCC_LIB_DIR}" DIRECTORY)   # /usr/lib
-        get_filename_component(GCC_TOOLCHAIN_DIR "${GCC_LIB_DIR}" DIRECTORY)  # /usr
-        
-        message(STATUS "Found GCC libstdc++ at: ${GCC_LIBSTDCXX_PATH}")
-        message(STATUS "GCC version directory: ${GCC_VERSION_DIR}")
-        message(STATUS "Using GCC toolchain prefix: ${GCC_TOOLCHAIN_DIR}")
-        
-        # Configure Clang to explicitly use GCC 11's toolchain (headers and libstdc++)
-        # The --gcc-toolchain flag tells Clang where to find GCC's headers/libraries
-        # This ensures Clang uses GCC 11's libstdc++ instead of newer versions
-        set(GCC_TOOLCHAIN_FLAG "--gcc-toolchain=${GCC_TOOLCHAIN_DIR}")
-        
-        # Also set the library search path to prioritize GCC 11's libstdc++
-        get_filename_component(GCC_LIBSTDCXX_DIR "${GCC_LIBSTDCXX_PATH}" DIRECTORY)
-        set(GCC_LIBSTDCXX_LDFLAG "-L${GCC_LIBSTDCXX_DIR} -Wl,-rpath-link,${GCC_LIBSTDCXX_DIR}")
-    else()
-        message(WARNING "Could not find GCC libstdc++ for Ubuntu 22.04 aarch64 - compatibility may be affected")
-        set(GCC_TOOLCHAIN_FLAG "")
-        set(GCC_LIBSTDCXX_LDFLAG "")
-    endif()
-else()
-    # For other platforms, use default behavior (Clang will use system libstdc++)
-    set(GCC_TOOLCHAIN_FLAG "")
-    set(GCC_LIBSTDCXX_LDFLAG "")
-endif()
-
 # C compiler flags (for C source files like duktape.c)
-set(CMAKE_C_FLAGS                   "-Wno-enum-constexpr-conversion -Wno-error=enum-constexpr-conversion -std=gnu11 -fPIC ${ARCH_FLAG} -Wall -fexceptions -Wno-unknown-pragmas -fvisibility=hidden -D_LIBCPP_STD_VER=17 ${GCC_TOOLCHAIN_FLAG}")
+set(CMAKE_C_FLAGS                   "-Wno-enum-constexpr-conversion -Wno-error=enum-constexpr-conversion -std=gnu11 -fPIC ${ARCH_FLAG} -Wall -fexceptions -Wno-unknown-pragmas -fvisibility=hidden -D_LIBCPP_STD_VER=17")
 set(CMAKE_C_FLAGS_DEBUG             "-g")  # Include debug symbols
 set(CMAKE_C_FLAGS_RELEASE           "-O2")  # Optimize for size/speed
 set(CMAKE_C_FLAGS_RELWITHDEBINFO    "-O2 -g")  # Optimize but keep debug info
 
 # C++ compiler flags (for C++ source files like .cpp files)
-# Explicitly use libstdc++ (GCC's C++ library) to match system libraries
-set(CMAKE_CXX_FLAGS                 "-Wno-enum-constexpr-conversion -Wno-error=enum-constexpr-conversion -fPIC ${ARCH_FLAG} -Wall -fexceptions -Wno-unknown-pragmas -fvisibility=hidden -D_LIBCPP_STD_VER=17 -stdlib=libstdc++ ${GCC_TOOLCHAIN_FLAG}")
+set(CMAKE_CXX_FLAGS                 "-Wno-enum-constexpr-conversion -Wno-error=enum-constexpr-conversion -fPIC ${ARCH_FLAG} -Wall -fexceptions -Wno-unknown-pragmas -fvisibility=hidden -D_LIBCPP_STD_VER=17")
 set(CMAKE_CXX_FLAGS_DEBUG           "-g")  # Include debug symbols
 set(CMAKE_CXX_FLAGS_RELEASE         "-O2")  # Optimize for size/speed
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "-O2 -g")  # Optimize but keep debug info
 
 # Linker flags (how to combine compiled files into the final plugin)
-# Ensure we link against system libstdc++ and don't require newer GLIBCXX symbols
-set(CMAKE_MODULE_LINKER_FLAGS       "${ARCH_FLAG} -Wl,-soname=${SONAME} -Wl,--exclude-libs,ALL -Wl,--no-undefined -stdlib=libstdc++ ${GCC_TOOLCHAIN_FLAG} ${GCC_LIBSTDCXX_LDFLAG}")
-set(CMAKE_SHARED_LINKER_FLAGS       "-stdlib=libstdc++ ${GCC_TOOLCHAIN_FLAG} ${GCC_LIBSTDCXX_LDFLAG}")
+set(CMAKE_MODULE_LINKER_FLAGS       "${ARCH_FLAG} -Wl,-soname=${SONAME} -Wl,--exclude-libs,ALL -Wl,--no-undefined")
 # Strip debug symbols in Release builds (makes file smaller, matches older CodeBlocks behavior)
 set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "-s")
 set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "-s")
@@ -452,4 +397,3 @@ install(
 
 # Set correct file ownership after installation
 install(CODE "execute_process(COMMAND chown -f \"${INSTALL_OWNER}\" \"${CMAKE_INSTALL_PREFIX}/BaseElements.fmx\" COMMAND_ECHO STDOUT)")
-
