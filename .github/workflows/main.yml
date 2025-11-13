@@ -146,6 +146,9 @@ jobs:
     runs-on: ubuntu-22.04-arm
     container:
       image: ubuntu:22.04
+    defaults:
+      run:
+        shell: bash
     env:
       PLATFORM: ubuntu22.04-aarch64
 
