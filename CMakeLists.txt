@@ -326,11 +326,6 @@ target_link_libraries(
     de265      # HEVC video codec
     jq         # JSON query processor
     openjp2    # JPEG 2000 support
-    webp       # WebP image format (required by ImageMagick)
-              # ImageMagick was built with webp support, so it needs to link against libwebp.
-              # Without this, GitHub runners fail with undefined references to WebP functions
-              # (WebPGetEncoderVersion, WebPFreeDecBuffer, WebPEncode, etc.) even though
-              # libwebp-dev is installed. The library must be explicitly linked.
     
     # Poco libraries (continued)
     PocoCrypto
