@@ -57,7 +57,6 @@
 #endif
 
 
-#include <iconv/iconv.h>
 
 #include "BEPluginFunctions.h"
 
@@ -90,6 +89,12 @@
 #include "Crypto/BEOpenSSLAES.h"
 #include "Crypto/BEOpenSSLRSA.h"
 #include "Images/BEJPEG.h"
+
+#ifdef __APPLE__
+#include <iconv.h>
+#else
+#include <iconv/iconv.h>
+#endif
 
 #include <algorithm>
 #include <list>

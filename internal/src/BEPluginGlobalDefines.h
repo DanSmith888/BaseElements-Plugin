@@ -30,6 +30,7 @@
 
 	#define BEP_EXPORT __attribute__((visibility("default")))
 
+	#define BE_PLUGIN_BUNDLE_IDENTIFIER "au.com.goya.baseelements"
 	#define USER_PREFERENCES_DOMAIN BE_PLUGIN_BUNDLE_IDENTIFIER".plugin-user"
 	#define FOPEN fopen
 

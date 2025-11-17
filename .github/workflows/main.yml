@@ -119,6 +119,10 @@ jobs:
           curl -sSL -o external.tar.gz "${URL}"
           tar -xzf external.tar.gz
 
+      - name: Copy Linux CMakeLists.txt
+        run: |
+          cp -f CMakeLists-linux.txt CMakeLists.txt
+
       - name: Configure and build
         env:
           CC: clang
@@ -246,6 +250,10 @@ jobs:
           else
             echo "LLVM ${VERSION} not found, using system defaults."
           fi
+
+      - name: Copy Linux CMakeLists.txt
+        run: |
+          cp -f CMakeLists-linux.txt CMakeLists.txt
 
       - name: Configure and build (ARM container)
         env:
